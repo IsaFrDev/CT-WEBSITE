@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT – Cyber Team | Phishing Himoya Platformasi</title>
+    <meta name="description" content="CT Cyber Team - Phishingdan real-time himoya. Telegram bot, mobil ilova va web tizim orqali xavfsizlik.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <div class="logo-icon">🛡️</div>
+                <span>CT <span class="accent">Cyber Team</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="#home" class="nav-link active" data-i18n="nav_home">Home</a>
+                <a href="#about" class="nav-link" data-i18n="nav_about">About</a>
+                <a href="#features" class="nav-link" data-i18n="nav_features">Features</a>
+                <a href="#how-it-works" class="nav-link" data-i18n="nav_how">How it Works</a>
+                <a href="#dashboard" class="nav-link" data-i18n="nav_dash">Dashboard</a>
+                <a href="#try-now" class="nav-link nav-cta" data-i18n="nav_try">Try Now</a>
+                <div class="lang-switcher">
+                    <select id="langSelect">
+                        <option value="uz">UZ</option>
+                        <option value="en">EN</option>
+                        <option value="ru">RU</option>
+                    </select>
+                </div>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-glow hero-glow-1"></div>
+        <div class="hero-glow hero-glow-2"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge" data-i18n="hero_badge">🔒 AI-Powered Cyber Security</div>
+                <h1 class="hero-title" data-i18n="hero_title">
+                    Protect Yourself From
+                    <span class="gradient-text">Phishing Attacks</span>
+                </h1>
+                <p class="hero-subtitle" data-i18n="hero_subtitle">
+                    CT Cyber Team platformasi Telegram bot, mobil ilova va web tizim orqali 
+                    phishingni <strong>real-time</strong> aniqlaydi va foydalanuvchini himoya qiladi.
+                </p>
+                <div class="hero-actions">
+                    <a href="#try-now" class="btn btn-primary">
+                        <span data-i18n="btn_start">🚀 Boshlash</span>
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline">
+                        <span data-i18n="btn_how">▶ Qanday ishlaydi</span>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" data-count="15247">0</span>
+                        <span class="hero-stat-label">Threats Blocked</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" data-count="8432">0</span>
+                        <span class="hero-stat-label">Protected Users</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" data-count="99">0</span>
+                        <span class="hero-stat-label">% Detection Rate</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="scanner-demo" id="scannerDemo">
+                    <div class="scanner-header">
+                        <div class="scanner-dots"><span></span><span></span><span></span></div>
+                        <span class="scanner-title">CT Link Scanner</span>
+                    </div>
+                    <div class="scanner-body">
+                        <div class="scanner-input-group">
+                            <input type="text" class="scanner-input" id="demoInput" placeholder="Enter URL to scan..." value="https://paypa1-secure.xyz/login">
+                            <button class="scanner-btn" id="demoScan">Scan</button>
+                        </div>
+                        <div class="scanner-result" id="scanResult">
+                            <div class="result-icon">🔴</div>
+                            <div class="result-text">
+                                <strong>PHISHING DETECTED!</strong>
+                                <p>Brand impersonation: paypal</p>
+                                <p>Risk Score: 85/100</p>
+                            </div>
+                        </div>
+                        <div class="scanner-log">
+                            <div class="log-line"><span class="log-check">✓</span> URL structure analyzed</div>
+                            <div class="log-line"><span class="log-check">✓</span> Domain reputation checked</div>
+                            <div class="log-line"><span class="log-warn">⚠</span> Homoglyph attack: "paypa1" → "paypal"</div>
+                            <div class="log-line"><span class="log-warn">⚠</span> Suspicious TLD: .xyz</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="about_badge">ℹ️ About Us</span>
+                <h2 class="section-title" data-i18n="about_title">CT – <span class="gradient-text">Cyber Team</span></h2>
+                <p class="section-subtitle" data-i18n="about_subtitle">Biz O'zbekistonda kiberxavfsizlikni oshirish maqsadida tashkil topgan jamoamiz</p>
+            </div>
+            <div class="about-grid">
+                <div class="about-card">
+                    <div class="about-icon">🎯</div>
+                    <h3>Muammo</h3>
+                    <p>Phishing hujumlari har yili 300% oshmoqda. O'zbekistonda odamlar link orqali akkauntlarini yo'qotmoqda.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">💡</div>
+                    <h3>Yechim</h3>
+                    <p>AI-powered platforma orqali har bir linkni real-time tekshirish va foydalanuvchilarni ogohlantirish.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">🛡️</div>
+                    <h3>Missiya</h3>
+                    <p>Har bir oddiy foydalanuvchini professional darajadagi kiberxavfsizlik bilan ta'minlash.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">🌐</div>
+                    <h3>Ekotizim</h3>
+                    <p>Web, Telegram Bot va Mobil Ilova — bitta platformada barcha himoya vositalari.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section section-dark" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="feature_badge">⚡ Features</span>
+                <h2 class="section-title" data-i18n="feature_title">Asosiy <span class="gradient-text">Featurelar</span></h2>
+                <p class="section-subtitle" data-i18n="nav_features">Professional darajadagi xavfsizlik — oddiy interfeys bilan</p>
+            </div>
+            <div class="features-grid">
+                <!-- Scanner Category -->
+                <div class="feature-category">
+                    <div class="category-header">
+                        <div class="category-icon scanner-icon">🔍</div>
+                        <h3>Scanner</h3>
+                        <p>Himoya qilish</p>
+                    </div>
+                    <div class="category-items">
+                        <div class="feature-item"><span class="fi-icon">🦠</span><div><strong>Antivirus</strong><p>Link va file scanning</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">📋</span><div><strong>Zayavka tekshirish</strong><p>User reportlarni tahlil</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">🔗</span><div><strong>Code Review</strong><p>Link xavfsizligini tekshirish</p></div></div>
+                    </div>
+                </div>
+                <!-- Analyze Category -->
+                <div class="feature-category">
+                    <div class="category-header">
+                        <div class="category-icon analyze-icon">🧠</div>
+                        <h3>Analyze</h3>
+                        <p>Analiz qilish</p>
+                    </div>
+                    <div class="category-items">
+                        <div class="feature-item"><span class="fi-icon">📧</span><div><strong>Email Security</strong><p>Phishing emaillarni aniqlash</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">📊</span><div><strong>Log Analysis</strong><p>SIEM-ga o'xshash monitoring</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">🤖</span><div><strong>Threat Intelligence</strong><p>AI bilan tahdid tahlili</p></div></div>
+                    </div>
+                </div>
+                <!-- Free Category -->
+                <div class="feature-category">
+                    <div class="category-header">
+                        <div class="category-icon free-icon">🎁</div>
+                        <h3>Free Plan</h3>
+                        <p>Bepul boshlang</p>
+                    </div>
+                    <div class="category-items">
+                        <div class="feature-item"><span class="fi-icon">✅</span><div><strong>Basic Protection</strong><p>Asosiy himoya — bepul</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">⭐</span><div><strong>Premium AI</strong><p>Kengaytirilgan AI tahlil</p></div></div>
+                        <div class="feature-item"><span class="fi-icon">🔔</span><div><strong>Notifications</strong><p>Real-time ogohlantirish</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="how_badge">⚙️ How It Works</span>
+                <h2 class="section-title" data-i18n="how_title">Qanday <span class="gradient-text">Ishlaydi</span></h2>
+                <p class="section-subtitle" data-i18n="hero_subtitle">AI modelimiz bir necha soniya ichida xavfli linkni aniqlaydi</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">📱</div>
+                    <h3>Link Yuboring</h3>
+                    <p>Telegram bot, web yoki mobil ilova orqali shubhali linkni yuboring</p>
+                </div>
+                <div class="step-connector"><div class="connector-line"></div></div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">🧠</div>
+                    <h3>AI Tahlil</h3>
+                    <p>NLP model URL strukturasini, domainni va kontentni tahlil qiladi</p>
+                </div>
+                <div class="step-connector"><div class="connector-line"></div></div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">📊</div>
+                    <h3>Risk Scoring</h3>
+                    <p>14+ tekshiruvdan o'tib, 0-100 risk ball beriladi</p>
+                </div>
+                <div class="step-connector"><div class="connector-line"></div></div>
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">🛡️</div>
+                    <h3>Himoya</h3>
+                    <p>Natija: ✅ Xavfsiz, ⚠️ Shubhali yoki 🔴 PHISHING!</p>
+                </div>
+            </div>
+            <!-- AI Details -->
+            <div class="ai-details">
+                <h3>🧠 AI Model Detallari</h3>
+                <div class="ai-grid">
+                    <div class="ai-item"><span>🔤</span><strong>NLP Pattern Matching</strong><p>"urgent", "click now", "verify account" kabi patternlar</p></div>
+                    <div class="ai-item"><span>🔗</span><strong>URL Structure Check</strong><p>Domain, subdomain, TLD, path tahlili</p></div>
+                    <div class="ai-item"><span>🕵️</span><strong>Brand Impersonation</strong><p>paypa1 vs paypal — soxta domainlarni aniqlash</p></div>
+                    <div class="ai-item"><span>📝</span><strong>Homoglyph Detection</strong><p>O'xshash harflar bilan aldash usullarini topish</p></div>
+                    <div class="ai-item"><span>📋</span><strong>Blacklist Database</strong><p>Ma'lum phishing saytlar bazasi</p></div>
+                    <div class="ai-item"><span>🤖</span><strong>ML Classification</strong><p>Mashinaviy o'rganish asosida tasniflash</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Dashboard Section -->
+    <section class="section section-dark" id="dashboard">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="dash_badge">📊 Dashboard</span>
+                <h2 class="section-title" data-i18n="dash_title">Live <span class="gradient-text">Statistika</span></h2>
+                <p class="section-subtitle" data-i18n="dash_badge">Real-time platforma ma'lumotlari</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <div class="dash-icon" style="--clr: #00d4ff">🔍</div>
+                    <div class="dash-value" id="dashScans">0</div>
+                    <div class="dash-label">Total Scans</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="--clr: #ff4757">🔴</div>
+                    <div class="dash-value" id="dashPhishing">0</div>
+                    <div class="dash-label">Phishing Detected</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="--clr: #2ed573">👥</div>
+                    <div class="dash-value" id="dashUsers">0</div>
+                    <div class="dash-label">Protected Users</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="--clr: #ffa502">🟡</div>
+                    <div class="dash-value" id="dashSuspicious">0</div>
+                    <div class="dash-label">Suspicious Links</div>
+                </div>
+            </div>
+            <!-- Chart Area -->
+            <div class="chart-area">
+                <div class="chart-card">
+                    <h4>📈 Oxirgi 7 Kun — Scan Activity</h4>
+                    <div class="chart-bars" id="chartBars"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>🥧 Threat Distribution</h4>
+                    <div class="pie-chart" id="pieChart">
+                        <div class="pie-segment safe"></div>
+                        <div class="pie-legend">
+                            <div><span class="dot green"></span> Safe (65%)</div>
+                            <div><span class="dot red"></span> Phishing (22%)</div>
+                            <div><span class="dot yellow"></span> Suspicious (13%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Scanner Section -->
+    <section class="section" id="try-now">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge" data-i18n="try_badge">🚀 Try Now</span>
+                <h2 class="section-title" data-i18n="try_title">Hoziroq <span class="gradient-text">Sinab Ko'ring</span></h2>
+                <p class="section-subtitle" data-i18n="scan_placeholder">Linkni kiriting va natijani bir zumda oling</p>
+            </div>
+            <div class="try-now-content">
+                <div class="live-scanner">
+                    <div class="ls-header">
+                        <div class="ls-dots"><span></span><span></span><span></span></div>
+                        <span>CT Cyber Team — Live Scanner</span>
+                    </div>
+                    <div class="ls-body">
+                        <div class="ls-input-row">
+                            <input type="text" id="liveInput" class="ls-input" placeholder="https://example.com">
+                            <button id="liveScan" class="ls-btn">🔍 Scan</button>
+                        </div>
+                        <div class="ls-output" id="liveOutput">
+                            <p class="ls-placeholder">Natijalar shu yerda ko'rinadi...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="download-cards">
+                    <div class="dl-card">
+                        <div class="dl-icon">🤖</div>
+                        <h3>Telegram Bot</h3>
+                        <p>Real-time link tekshirish</p>
+                        <a href="https://t.me/ct_cyberteam_bot" class="btn btn-primary btn-sm" target="_blank">Botni Ochish</a>
+                    </div>
+                    <div class="dl-card">
+                        <div class="dl-icon">📱</div>
+                        <h3>Mobile App</h3>
+                        <p>SMS monitoring & himoya</p>
+                        <a href="#" class="btn btn-outline btn-sm">Tez Kunda</a>
+                    </div>
+                    <div class="dl-card">
+                        <div class="dl-icon">💎</div>
+                        <h3>Premium</h3>
+                        <p>Advanced AI himoya</p>
+                        <a href="#" class="btn btn-outline btn-sm">Batafsil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="nav-logo"><div class="logo-icon">🛡️</div><span>CT <span class="accent">Cyber Team</span></span></div>
+                    <p data-i18n="footer_brand_desc">Phishingdan himoya — har bir foydalanuvchi uchun.</p>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer_platform">Platform</h4>
+                    <a href="#features" data-i18n="nav_features">Features</a>
+                    <a href="#how-it-works" data-i18n="nav_how">How it Works</a>
+                    <a href="#dashboard" data-i18n="nav_dash">Dashboard</a>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer_products">Products</h4>
+                    <a href="https://t.me/ct_cyberteam_bot">Telegram Bot</a>
+                    <a href="#">Mobile App</a>
+                    <a href="swagger.html">API Documentation</a>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer_contact">Contact</h4>
+                    <a href="#">@ct_cyberteam</a>
+                    <a href="#">info@ct-cyberteam.uz</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CT Cyber Team. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

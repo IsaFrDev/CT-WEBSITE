@@ -1,0 +1,142 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CT - Cyber Team API Documentation",
+    "description": "API for CT - Cyber Team phishing detection platform. Includes URL scanning, message analysis, and statistics.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/scan/url": {
+      "post": {
+        "summary": "Scan a URL for phishing threats",
+        "tags": ["Scanning"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string", "example": "https://paypa1-secure.xyz" },
+                  "telegram_id": { "type": "integer", "example": 123456789 }
+                },
+                "required": ["url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": { "type": "string", "example": "phishing" },
+                    "confidence": { "type": "number", "example": 0.85 },
+                    "risk_score": { "type": "integer", "example": 85 },
+                    "findings": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scan/message": {
+      "post": {
+        "summary": "Analyze message content for phishing indicators",
+        "tags": ["Scanning"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string", "example": "Urgent: Your account is blocked. Click here to verify." },
+                  "telegram_id": { "type": "integer" }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis results"
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Get platform statistics",
+        "tags": ["Statistics"],
+        "responses": {
+          "200": {
+            "description": "Current platform stats"
+          }
+        }
+      }
+    },
+    "/report": {
+      "post": {
+        "summary": "Submit a phishing report",
+        "tags": ["Reports"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string" },
+                  "report_type": { "type": "string", "enum": ["url", "text"] },
+                  "telegram_id": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report submitted"
+          }
+        }
+      }
+    },
+    "/user/register": {
+      "post": {
+        "summary": "Register a user from Telegram",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "telegram_id": { "type": "integer" },
+                  "username": { "type": "string" },
+                  "first_name": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered" }
+        }
+      }
+    }
+  }
+}
