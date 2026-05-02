@@ -6,6 +6,13 @@
 const API_BASE = 'http://localhost:5000/api';
 
 // ============================================================
+//  SUPABASE CLIENT INITIALIZATION
+// ============================================================
+const supabaseUrl = 'https://iwtkibrjkyunvebvdceq.supabase.co';
+const supabaseKey = 'sb_publishable_cXQO4ID5Rrf7wlAhDyExMQ_JshkDfNM';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// ============================================================
 //  PHISHING ANALYZER (Client-side fallback)
 // ============================================================
 const PHISHING_KEYWORDS = [
@@ -303,4 +310,99 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('ct_lang') || 'uz';
     if (langSelect) langSelect.value = savedLang;
     setLanguage(savedLang);
+
+    // ============================================================
+    //  GMAIL OAUTH & SCANNER
+    // ============================================================
+    const CLIENT_ID = '47473682665-l0od8aalgp6doikk0bpu347nhup46jao.apps.googleusercontent.com';
+    const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+    const btnGmailScan = document.getElementById('btnGmailScan');
+    const gmailOutput = document.getElementById('gmailOutput');
+
+    btnGmailScan?.addEventListener('click', () => {
+        if (window.location.protocol === 'file:') {
+            alert("Xatolik: Google orqali kirish uchun saytni Live Server (yoki HTTP server) orqali ochishingiz kerak. 'file://' manzilida Google ruxsat bermaydi!");
+            return;
+        }
+
+        const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+        const form = document.createElement('form');
+        form.setAttribute('method', 'GET');
+        form.setAttribute('action', oauth2Endpoint);
+
+        const params = {
+            'client_id': CLIENT_ID,
+            'redirect_uri': REDIRECT_URI,
+            'response_type': 'token',
+            'scope': 'https://www.googleapis.com/auth/gmail.readonly',
+            'include_granted_scopes': 'true',
+            'state': 'gmail_auth'
+        };
+
+        for (let p in params) {
+            let input = document.createElement('input');
+            input.setAttribute('type', 'hidden');
+            input.setAttribute('name', p);
+            input.setAttribute('value', params[p]);
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    });
+
+    // Check if returned from Google Auth
+    const fragmentString = location.hash.substring(1);
+    const params = {};
+    const regex = /([^&=]+)=([^&]*)/g;
+    let m;
+    while (m = regex.exec(fragmentString)) {
+        params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+    }
+    
+    if (Object.keys(params).length > 0 && params['access_token']) {
+        // Clear hash to prevent accidental re-fetches
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        if (gmailOutput) {
+            gmailOutput.style.display = 'block';
+            gmailOutput.innerHTML = '<p style="color:var(--accent);animation:pulse 1s infinite">📧 Gmaildan xabarlar olinmoqda va AI tekshirmoqda...</p>';
+            
+            // Scroll down to the Try Now section automatically
+            setTimeout(() => {
+                document.getElementById('try-now')?.scrollIntoView({behavior:'smooth'});
+            }, 300);
+
+            fetch(`${API_BASE}/gmail/fetch`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({token: params['access_token']})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                let html = '<h4 style="margin-bottom:10px; color:#fff;">Oxirgi Xabarlar:</h4>';
+                data.forEach(msg => {
+                    const color = msg.result === 'phishing' ? '#ff4757' : msg.result === 'suspicious' ? '#ffa502' : '#2ed573';
+                    const emoji = msg.result === 'phishing' ? '🔴' : msg.result === 'suspicious' ? '🟡' : '🟢';
+                    html += `
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid ${color}">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <strong style="color:#fff; font-size:0.95rem;">${msg.sender.substring(0, 35)}</strong>
+                                <span style="color:#888; font-size:0.8rem;">${msg.time}</span>
+                            </div>
+                            <p style="font-size:0.9rem; margin-bottom:8px; color:#ddd; line-height:1.4;">${msg.text.substring(0, 100)}...</p>
+                            <div style="font-size:0.85rem; color:${color}; font-weight:600; padding:6px; background:rgba(0,0,0,0.2); border-radius:4px;">
+                                ${emoji} AI Xulosasi: ${msg.reason}
+                            </div>
+                        </div>
+                    `;
+                });
+                gmailOutput.innerHTML = html;
+            })
+            .catch(err => {
+                gmailOutput.innerHTML = `<p style="color:var(--danger)">❌ Xatolik yuz berdi: ${err.message}</p>`;
+            });
+        }
+    }
 });
