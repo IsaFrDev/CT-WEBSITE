@@ -3,7 +3,15 @@
  * Handles scanner, dashboard, animations, and navigation.
  */
 
-const API_BASE = 'http://localhost:5000/api';
+function resolveApiBase() {
+    if (typeof window === 'undefined') return 'http://localhost:5000/api';
+    if (typeof window.__CT_API_BASE__ === 'string' && window.__CT_API_BASE__.trim())
+        return window.__CT_API_BASE__.trim();
+    const h = window.location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:5000/api';
+    return '';
+}
+const API_BASE = resolveApiBase();
 
 /** Supabase Email: Providers → Email (yoqiq).
  *  Authentication → URL configuration: Site URL ham, Redirect URLs ham `getRedirectForSupabaseMagicLink()` chiqqan manzil bilan bir xil (masalan prod Vercel). */
