@@ -305,10 +305,26 @@ document.addEventListener('DOMContentLoaded', () => {
     setLanguage(savedLang);
 
     // ============================================================
-    //  GMAIL OAUTH & SCANNER
+    //  GMAIL OAUTH & SCANNER  (implicit flow → redirect_uri MUST match Google Cloud Console «Authorized redirect URIs» exactly)
     // ============================================================
     const CLIENT_ID = '47473682665-l0od8aalgp6doikk0bpu347nhup46jao.apps.googleusercontent.com';
-    const REDIRECT_URI = window.location.origin + window.location.pathname;
+    /** If non-empty: use this literal URI only (easiest fix for GH Pages — paste same string in GCP). */
+    const GOOGLE_REDIRECT_URI_OVERRIDE =
+        typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__
+            ? window.__CT_GOOGLE_REDIRECT_URI__
+            : '';
+
+    function getGoogleOAuthRedirectUri() {
+        if (GOOGLE_REDIRECT_URI_OVERRIDE.trim()) return GOOGLE_REDIRECT_URI_OVERRIDE.trim();
+
+        let path = window.location.pathname || '/';
+        path = path.replace(/\/(?:index)?\.html?$/i, '');
+        if (path !== '/' && !path.endsWith('/')) path += '/';
+        if (path === '') path = '/';
+        return window.location.origin + path;
+    }
+
+    const REDIRECT_URI = getGoogleOAuthRedirectUri();
 
     const btnGmailScan = document.getElementById('btnGmailScan');
     const gmailOutput = document.getElementById('gmailOutput');
@@ -354,8 +370,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (Object.keys(params).length > 0 && params['access_token']) {
-        // Clear hash to prevent accidental re-fetches
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const pathOnly = REDIRECT_URI.startsWith(window.location.origin)
+            ? REDIRECT_URI.slice(window.location.origin.length) || '/'
+            : window.location.pathname;
+        window.history.replaceState({}, document.title, pathOnly);
         
         if (gmailOutput) {
             gmailOutput.style.display = 'block';
