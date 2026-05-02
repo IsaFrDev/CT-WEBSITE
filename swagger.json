@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "CT - Cyber Team API Documentation",
-    "description": "API for CT - Cyber Team phishing detection platform. Includes URL scanning, message analysis, and statistics.",
+    "description": "API for CT — Cyber Team fraud / malicious-link detection. Includes URL scanning, message analysis, and statistics.",
     "version": "1.0.0"
   },
   "servers": [
@@ -14,7 +14,7 @@
   "paths": {
     "/scan/url": {
       "post": {
-        "summary": "Scan a URL for phishing threats",
+        "summary": "Scan a URL for fraud / malicious indicators",
         "tags": ["Scanning"],
         "requestBody": {
           "required": true,
@@ -53,7 +53,7 @@
     },
     "/scan/message": {
       "post": {
-        "summary": "Analyze message content for phishing indicators",
+        "summary": "Analyze message content for fraud indicators",
         "tags": ["Scanning"],
         "requestBody": {
           "required": true,
@@ -90,7 +90,7 @@
     },
     "/report": {
       "post": {
-        "summary": "Submit a phishing report",
+        "summary": "Submit a fraud / malicious link report",
         "tags": ["Reports"],
         "requestBody": {
           "required": true,

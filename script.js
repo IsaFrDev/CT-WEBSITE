@@ -114,7 +114,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined' 
 }
 
 // ============================================================
-//  PHISHING ANALYZER (Client-side fallback)
+//  Firibgarlik / URL ANALYZER (Client-side fallback)
 // ============================================================
 const PHISHING_KEYWORDS = [
     'urgent','click now','verify account','suspended','blocked',
@@ -257,7 +257,7 @@ demoScan?.addEventListener('click', () => {
     const r = analyzeUrl(url);
     const emoji = r.result === 'phishing' ? '🔴' : r.result === 'suspicious' ? '🟡' : '🟢';
     const color = r.result === 'phishing' ? '#ff4757' : r.result === 'suspicious' ? '#ffa502' : '#2ed573';
-    const label = r.result === 'phishing' ? 'PHISHING DETECTED!' : r.result === 'suspicious' ? 'SUSPICIOUS LINK' : 'LINK IS SAFE';
+    const label = r.result === 'phishing' ? 'FIRIBGARLIK ANIQLANDI!' : r.result === 'suspicious' ? 'SUSPICIOUS LINK' : 'LINK IS SAFE';
     scanResult.style.borderColor = color + '33';
     scanResult.style.background = color + '0d';
     scanResult.innerHTML = `
@@ -296,7 +296,7 @@ liveScan?.addEventListener('click', async () => {
 
     const emoji = result.result === 'phishing' ? '🔴' : result.result === 'suspicious' ? '🟡' : '🟢';
     const cls = result.result === 'phishing' ? 'result-phishing' : result.result === 'suspicious' ? 'result-suspicious' : 'result-safe';
-    const label = result.result === 'phishing' ? 'XAVFLI — PHISHING!' : result.result === 'suspicious' ? 'SHUBHALI LINK' : 'XAVFSIZ ✅';
+    const label = result.result === 'phishing' ? 'XAVFLI — FIRIBGARLIK!' : result.result === 'suspicious' ? 'SHUBHALI LINK' : 'XAVFSIZ ✅';
 
     let html = `<p class="${cls}" style="font-size:1.1rem;font-weight:700;margin-bottom:12px">${emoji} ${label}</p>`;
     html += `<p>📊 Risk Score: <strong>${result.risk_score}/100</strong></p>`;
