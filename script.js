@@ -5,6 +5,54 @@
 
 const API_BASE = 'http://localhost:5000/api';
 
+/** Supabase: Auth → Providers → Google. Google OAuth redirect = https://PROJECT.supabase.co/auth/v1/callback (GCP da sayt uchun redirect emas).
+ *  Shu joyga gmail.readonly qoshing: Providers → Google → Additional scopes → https://www.googleapis.com/auth/gmail.readonly
+ *  Auth → URL configuration → Redirect URLs ga sayt URL (misol: GitHub Pages) qo'shing — getSiteUrlForSupabaseOAuth() chiqaradigan qiymat. */
+const CT_SUPABASE = {
+    url: 'https://iwtkibrjkyunvebvdceq.supabase.co',
+    anonKey: ''
+};
+if (typeof window !== 'undefined' && window.__CT_SUPABASE__) {
+    Object.assign(CT_SUPABASE, window.__CT_SUPABASE__);
+}
+const SUPABASE_URL = String(CT_SUPABASE.url || '').trim();
+const SUPABASE_ANON_KEY = String(CT_SUPABASE.anonKey || '').trim();
+
+function getSiteUrlForSupabaseOAuth() {
+    if (typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__.trim())
+        return String(window.__CT_GOOGLE_REDIRECT_URI__).trim();
+    let path = window.location.pathname || '/';
+    path = path.replace(/\/(?:index)?\.html?$/i, '');
+    if (path !== '/' && !path.endsWith('/')) path += '/';
+    if (path === '') path = '/';
+    return window.location.origin + path;
+}
+
+let sbAuth = null;
+
+function consumeGmailFetchFlagAndRun(providerAccessToken) {
+    if (
+        typeof sessionStorage === 'undefined' ||
+        sessionStorage.getItem('ct_expect_gmail_fetch') !== '1' ||
+        !providerAccessToken
+    )
+        return false;
+    sessionStorage.removeItem('ct_expect_gmail_fetch');
+    void runGmailFetchWithGoogleToken(providerAccessToken);
+    return true;
+}
+
+if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+    sbAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { detectSessionInUrl: true },
+    });
+
+    sbAuth.auth.onAuthStateChange((event, session) => {
+        if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+        consumeGmailFetchFlagAndRun(session?.provider_token);
+    });
+}
+
 // ============================================================
 //  PHISHING ANALYZER (Client-side fallback)
 // ============================================================
@@ -264,6 +312,48 @@ if (dashSection) {
     dObs.observe(dashSection);
 }
 
+function runGmailFetchWithGoogleToken(googleAccessToken) {
+    const gmailOutput = document.getElementById('gmailOutput');
+    if (!gmailOutput || !googleAccessToken) return;
+
+    gmailOutput.style.display = 'block';
+    gmailOutput.innerHTML = '<p style="color:var(--accent);animation:pulse 1s infinite">📧 Gmaildan xabarlar olinmoqda va AI tekshirmoqda...</p>';
+    setTimeout(() => {
+        document.getElementById('try-now')?.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+
+    fetch(`${API_BASE}/gmail/fetch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleAccessToken })
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.error) throw new Error(data.error);
+            let html = '<h4 style="margin-bottom:10px; color:#fff;">Oxirgi Xabarlar:</h4>';
+            data.forEach((msg) => {
+                const color = msg.result === 'phishing' ? '#ff4757' : msg.result === 'suspicious' ? '#ffa502' : '#2ed573';
+                const emoji = msg.result === 'phishing' ? '🔴' : msg.result === 'suspicious' ? '🟡' : '🟢';
+                html += `
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid ${color}">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <strong style="color:#fff; font-size:0.95rem;">${msg.sender.substring(0, 35)}</strong>
+                                <span style="color:#888; font-size:0.8rem;">${msg.time}</span>
+                            </div>
+                            <p style="font-size:0.9rem; margin-bottom:8px; color:#ddd; line-height:1.4;">${msg.text.substring(0, 100)}...</p>
+                            <div style="font-size:0.85rem; color:${color}; font-weight:600; padding:6px; background:rgba(0,0,0,0.2); border-radius:4px;">
+                                ${emoji} AI Xulosasi: ${msg.reason}
+                            </div>
+                        </div>
+                    `;
+            });
+            gmailOutput.innerHTML = html;
+        })
+        .catch((err) => {
+            gmailOutput.innerHTML = `<p style="color:var(--danger)">❌ Xatolik yuz berdi: ${err.message}</p>`;
+        });
+}
+
 // ============================================================
 //  INIT
 // ============================================================
@@ -305,116 +395,47 @@ document.addEventListener('DOMContentLoaded', () => {
     setLanguage(savedLang);
 
     // ============================================================
-    //  GMAIL OAUTH & SCANNER  (implicit flow → redirect_uri MUST match Google Cloud Console «Authorized redirect URIs» exactly)
+    //  Gmail: Supabase Auth (Google provider) → provider_token → backend /gmail/fetch
     // ============================================================
-    const CLIENT_ID = '47473682665-l0od8aalgp6doikk0bpu347nhup46jao.apps.googleusercontent.com';
-    /** If non-empty: use this literal URI only (easiest fix for GH Pages — paste same string in GCP). */
-    const GOOGLE_REDIRECT_URI_OVERRIDE =
-        typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__
-            ? window.__CT_GOOGLE_REDIRECT_URI__
-            : '';
-
-    function getGoogleOAuthRedirectUri() {
-        if (GOOGLE_REDIRECT_URI_OVERRIDE.trim()) return GOOGLE_REDIRECT_URI_OVERRIDE.trim();
-
-        let path = window.location.pathname || '/';
-        path = path.replace(/\/(?:index)?\.html?$/i, '');
-        if (path !== '/' && !path.endsWith('/')) path += '/';
-        if (path === '') path = '/';
-        return window.location.origin + path;
-    }
-
-    const REDIRECT_URI = getGoogleOAuthRedirectUri();
-
     const btnGmailScan = document.getElementById('btnGmailScan');
-    const gmailOutput = document.getElementById('gmailOutput');
 
-    btnGmailScan?.addEventListener('click', () => {
+    btnGmailScan?.addEventListener('click', async () => {
         if (window.location.protocol === 'file:') {
-            alert("Xatolik: Google orqali kirish uchun saytni Live Server (yoki HTTP server) orqali ochishingiz kerak. 'file://' manzilida Google ruxsat bermaydi!");
+            alert("Xatolik: Google orqali kirish uchun saytni HTTP server orqali oching. 'file://'da ishlamaydi.");
+            return;
+        }
+        if (!sbAuth) {
+            alert('Supabase sozlangan emas.\n• script.js dagi CT_SUPABASE.anonKey ga anon kalit yozing,\n• yoki window.__CT_SUPABASE__ bilan url/anonKey bering.');
             return;
         }
 
-        const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-        const form = document.createElement('form');
-        form.setAttribute('method', 'GET');
-        form.setAttribute('action', oauth2Endpoint);
+        sessionStorage.setItem('ct_expect_gmail_fetch', '1');
+        const redirectTo = getSiteUrlForSupabaseOAuth();
 
-        const params = {
-            'client_id': CLIENT_ID,
-            'redirect_uri': REDIRECT_URI,
-            'response_type': 'token',
-            'scope': 'https://www.googleapis.com/auth/gmail.readonly',
-            'include_granted_scopes': 'true',
-            'state': 'gmail_auth'
-        };
-
-        for (let p in params) {
-            let input = document.createElement('input');
-            input.setAttribute('type', 'hidden');
-            input.setAttribute('name', p);
-            input.setAttribute('value', params[p]);
-            form.appendChild(input);
+        try {
+            const { error } = await sbAuth.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo,
+                    scopes:
+                        'openid email profile https://www.googleapis.com/auth/gmail.readonly',
+                    queryParams: { access_type: 'offline', prompt: 'consent' },
+                },
+            });
+            if (error) {
+                sessionStorage.removeItem('ct_expect_gmail_fetch');
+                alert('Google kirish xatosi: ' + error.message);
+            }
+        } catch (e) {
+            sessionStorage.removeItem('ct_expect_gmail_fetch');
+            alert(String(e?.message || e));
         }
-        console.info('[CT] Google OAuth redirect_uri — bu satrni nusxa olib GCP → Credentials → OAuth client → Authorized redirect URIs ichiga qoʻshing:', REDIRECT_URI);
-        document.body.appendChild(form);
-        form.submit();
     });
 
-    // Check if returned from Google Auth
-    const fragmentString = location.hash.substring(1);
-    const params = {};
-    const regex = /([^&=]+)=([^&]*)/g;
-    let m;
-    while (m = regex.exec(fragmentString)) {
-        params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-    }
-    
-    if (Object.keys(params).length > 0 && params['access_token']) {
-        const pathOnly = REDIRECT_URI.startsWith(window.location.origin)
-            ? REDIRECT_URI.slice(window.location.origin.length) || '/'
-            : window.location.pathname;
-        window.history.replaceState({}, document.title, pathOnly);
-        
-        if (gmailOutput) {
-            gmailOutput.style.display = 'block';
-            gmailOutput.innerHTML = '<p style="color:var(--accent);animation:pulse 1s infinite">📧 Gmaildan xabarlar olinmoqda va AI tekshirmoqda...</p>';
-            
-            // Scroll down to the Try Now section automatically
-            setTimeout(() => {
-                document.getElementById('try-now')?.scrollIntoView({behavior:'smooth'});
-            }, 300);
-
-            fetch(`${API_BASE}/gmail/fetch`, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({token: params['access_token']})
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                let html = '<h4 style="margin-bottom:10px; color:#fff;">Oxirgi Xabarlar:</h4>';
-                data.forEach(msg => {
-                    const color = msg.result === 'phishing' ? '#ff4757' : msg.result === 'suspicious' ? '#ffa502' : '#2ed573';
-                    const emoji = msg.result === 'phishing' ? '🔴' : msg.result === 'suspicious' ? '🟡' : '🟢';
-                    html += `
-                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid ${color}">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <strong style="color:#fff; font-size:0.95rem;">${msg.sender.substring(0, 35)}</strong>
-                                <span style="color:#888; font-size:0.8rem;">${msg.time}</span>
-                            </div>
-                            <p style="font-size:0.9rem; margin-bottom:8px; color:#ddd; line-height:1.4;">${msg.text.substring(0, 100)}...</p>
-                            <div style="font-size:0.85rem; color:${color}; font-weight:600; padding:6px; background:rgba(0,0,0,0.2); border-radius:4px;">
-                                ${emoji} AI Xulosasi: ${msg.reason}
-                            </div>
-                        </div>
-                    `;
-                });
-                gmailOutput.innerHTML = html;
-            })
-            .catch(err => {
-                gmailOutput.innerHTML = `<p style="color:var(--danger)">❌ Xatolik yuz berdi: ${err.message}</p>`;
-            });
-        }
+    if (sbAuth && typeof sessionStorage !== 'undefined') {
+        setTimeout(async () => {
+            const { data } = await sbAuth.auth.getSession();
+            consumeGmailFetchFlagAndRun(data.session?.provider_token);
+        }, 400);
     }
 });
