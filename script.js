@@ -6,13 +6,6 @@
 const API_BASE = 'http://localhost:5000/api';
 
 // ============================================================
-//  SUPABASE CLIENT INITIALIZATION
-// ============================================================
-const supabaseUrl = 'https://iwtkibrjkyunvebvdceq.supabase.co';
-const supabaseKey = 'sb_publishable_cXQO4ID5Rrf7wlAhDyExMQ_JshkDfNM';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-// ============================================================
 //  PHISHING ANALYZER (Client-side fallback)
 // ============================================================
 const PHISHING_KEYWORDS = [
