@@ -421,6 +421,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnEmailVerifyOtp = document.getElementById('btnEmailVerifyOtp');
     const authEmailHint = document.getElementById('authEmailHint');
 
+    /** Supabase OTP endpoint 429 bermasligi uchun mijozdan keyingi yuborish oralig'i (ms). */
+    const OTP_SEND_MIN_GAP_MS = 45000;
+    let otpSendCooldownUntil = 0;
+    let otpSendLabelOriginal = btnEmailSendOtp?.textContent || 'Kod yuborish';
+
+    function otpSendCooldownLeftSec() {
+        return Math.max(0, Math.ceil((otpSendCooldownUntil - Date.now()) / 1000));
+    }
+
+    function isAuthRateLimited(err) {
+        if (!err) return false;
+        const st = err.status ?? err.code;
+        if (st === 429 || String(st) === '429') return true;
+        const msg = `${err.message || ''}`.toLowerCase();
+        return /429|too many|rate.?limit|throttl|bir necha martta/i.test(msg);
+    }
+
+    const otpTick = setInterval(() => {
+        const left = otpSendCooldownLeftSec();
+        if (!btnEmailSendOtp) return;
+        if (left > 0) {
+            btnEmailSendOtp.disabled = true;
+            btnEmailSendOtp.textContent = `Kutasiz (${left}s)`;
+        } else {
+            btnEmailSendOtp.disabled = false;
+            btnEmailSendOtp.textContent = otpSendLabelOriginal;
+        }
+    }, 1000);
+
     btnEmailSendOtp?.addEventListener('click', async () => {
         if (window.location.protocol === 'file:') {
             alert('HTTP server orqali oching (`file://`da email auth ishlamaydi).');
@@ -432,6 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             return;
         }
+        const left = otpSendCooldownLeftSec();
+        if (left > 0 && authEmailHint) {
+            authEmailHint.textContent = `Biroz kutib turing (${left}s). Keyingi OTP xavfsizlik uchun oralig'i kerak.`;
+            return;
+        }
         const email = String(authEmailInput?.value || '')
             .trim()
             .toLowerCase();
@@ -441,6 +475,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('ct_otp_email', email);
         if (authEmailHint) authEmailHint.textContent = 'Yuborilmoqda…';
+        btnEmailSendOtp && (btnEmailSendOtp.disabled = true);
+
         const { error } = await sbAuth.auth.signInWithOtp({
             email,
             options: {
@@ -448,13 +484,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 shouldCreateUser: true,
             },
         });
+
         if (authEmailHint) {
-            authEmailHint.textContent = error
-                ? `Xato: ${error.message}`
-                : "Email tekshiring. Kod kelgan boʻlsa quyidagi maydonga yozing — yoki xabardagi havolani oching (magic link).";
+            if (error) {
+                if (isAuthRateLimited(error)) {
+                    otpSendCooldownUntil = Date.now() + 120000;
+                    authEmailHint.textContent =
+                        'Supabase chegarasi (429): juda tez‑tez yuborgan yoki kunlik limit toʻlgan. 2–5 daqiqa kuting, boshqa email bilan sinamasdan bitta akkauntni ishlating. Dashboard da Email rate limit rejasi tekshiring.';
+                } else {
+                    authEmailHint.textContent = `Xato: ${error.message}`;
+                }
+            } else {
+                otpSendCooldownUntil = Date.now() + OTP_SEND_MIN_GAP_MS;
+                authEmailHint.textContent =
+                    'Email tekshiring. Kod kelgan boʻlsa quyidagi maydonga yozing — yoki xabardagi havolani oching (magic link).';
+            }
         }
+        if (btnEmailSendOtp)
+            btnEmailSendOtp.disabled = otpSendCooldownLeftSec() > 0;
         if (error && typeof sessionStorage !== 'undefined') sessionStorage.removeItem('ct_otp_email');
     });
+
+    window.addEventListener('beforeunload', () => clearInterval(otpTick));
 
     btnEmailVerifyOtp?.addEventListener('click', async () => {
         if (!sbAuth) return;
