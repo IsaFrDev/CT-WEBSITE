@@ -5,9 +5,8 @@
 
 const API_BASE = 'http://localhost:5000/api';
 
-/** Supabase Email auth: Dashboard → Authentication → Providers → Email (YOQIQ).
- *  URL configuration → Site URL va Redirect URLs: getSiteUrlForAuthRedirect() mos URL (HTTPS + path).
- */
+/** Supabase Email: Providers → Email (yoqiq).
+ *  Authentication → URL configuration: Site URL ham, Redirect URLs ham `getRedirectForSupabaseMagicLink()` chiqqan manzil bilan bir xil (masalan prod Vercel). */
 const CT_SUPABASE = {
     url: 'https://iwtkibrjkyunvebvdceq.supabase.co',
     anonKey:
@@ -19,14 +18,58 @@ if (typeof window !== 'undefined' && window.__CT_SUPABASE__) {
 const SUPABASE_URL = String(CT_SUPABASE.url || '').trim();
 const SUPABASE_ANON_KEY = String(CT_SUPABASE.anonKey || '').trim();
 
+/** Ishlab chiqish uchun hozirgi sahifa URL; email havolasida KO‘PINCHA prod kerak → CT_EMAIL_AFTER_AUTH_REDIRECT. */
 function getSiteUrlForAuthRedirect() {
-    if (typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__.trim())
-        return String(window.__CT_GOOGLE_REDIRECT_URI__).trim();
     let path = window.location.pathname || '/';
     path = path.replace(/\/(?:index)?\.html?$/i, '');
     if (path !== '/' && !path.endsWith('/')) path += '/';
     if (path === '') path = '/';
     return window.location.origin + path;
+}
+
+/** Emaildagi «Verify» havolasi mana shu adresga boshlaydi (localhost emas!).
+ *  Lokal tekshirish: brauzerda `window.__CT_AUTH_REDIRECT_URL__ = 'http://localhost:3000/'` yozing (OTP yuborishdan OLDIN sahifani yangilang). */
+const CT_EMAIL_AFTER_AUTH_REDIRECT =
+    typeof window !== 'undefined' && window.__CT_EMAIL_AFTER_AUTH__
+        ? String(window.__CT_EMAIL_AFTER_AUTH__).trim()
+        : 'https://ct-website-red.vercel.app/';
+
+function normalizeAuthRedirectTarget(urlString) {
+    try {
+        const url = new URL(urlString.trim());
+        let path = url.pathname || '/';
+        path = path.replace(/\/(?:index)?\.html?$/i, '');
+        if (path !== '/' && !path.endsWith('/')) path += '/';
+        if (path === '') path = '/';
+        return url.origin + path;
+    } catch {
+        const s = String(urlString).trim();
+        return s.endsWith('/') ? s : `${s}/`;
+    }
+}
+
+function getRedirectForSupabaseMagicLink() {
+    const a =
+        typeof window.__CT_AUTH_REDIRECT_URL__ === 'string' && window.__CT_AUTH_REDIRECT_URL__.trim()
+            ? window.__CT_AUTH_REDIRECT_URL__.trim()
+            : '';
+    if (a) return normalizeAuthRedirectTarget(a);
+
+    const legacy =
+        typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__.trim()
+            ? window.__CT_GOOGLE_REDIRECT_URI__.trim()
+            : '';
+    if (legacy) return normalizeAuthRedirectTarget(legacy);
+
+    if (CT_EMAIL_AFTER_AUTH_REDIRECT) return normalizeAuthRedirectTarget(CT_EMAIL_AFTER_AUTH_REDIRECT);
+
+    return getSiteUrlForAuthRedirect();
+}
+
+function stripOAuthFragmentFromBar() {
+    if (!window.location.hash || !/#access_token=/.test(window.location.hash)) return;
+    const clean = `${window.location.pathname}${window.location.search || ''}`;
+    window.history.replaceState({}, document.title, clean);
 }
 
 let sbAuth = null;
@@ -55,6 +98,7 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined' 
 
     sbAuth.auth.onAuthStateChange((event, session) => {
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user?.email) {
+            stripOAuthFragmentFromBar();
             showEmailSignedInBanner(session.user.email);
         }
         if (event === 'SIGNED_OUT') shownEmailBannerFor = '';
@@ -392,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { error } = await sbAuth.auth.signInWithOtp({
             email,
             options: {
-                emailRedirectTo: getSiteUrlForAuthRedirect(),
+                emailRedirectTo: getRedirectForSupabaseMagicLink(),
                 shouldCreateUser: true,
             },
         });
