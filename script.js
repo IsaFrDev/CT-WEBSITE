@@ -356,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.setAttribute('value', params[p]);
             form.appendChild(input);
         }
+        console.info('[CT] Google OAuth redirect_uri — bu satrni nusxa olib GCP → Credentials → OAuth client → Authorized redirect URIs ichiga qoʻshing:', REDIRECT_URI);
         document.body.appendChild(form);
         form.submit();
     });
