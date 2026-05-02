@@ -10,7 +10,8 @@ const API_BASE = 'http://localhost:5000/api';
  *  Auth → URL configuration → Redirect URLs ga sayt URL (misol: GitHub Pages) qo'shing — getSiteUrlForSupabaseOAuth() chiqaradigan qiymat. */
 const CT_SUPABASE = {
     url: 'https://iwtkibrjkyunvebvdceq.supabase.co',
-    anonKey: ''
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3dGtpYnJqa3l1bnZlYnZkY2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MDM4NTksImV4cCI6MjA5MzI3OTg1OX0.H06pXAyKgKxIackBSKl2tM91HPvpuzR3ly7jNqyqhVc',
 };
 if (typeof window !== 'undefined' && window.__CT_SUPABASE__) {
     Object.assign(CT_SUPABASE, window.__CT_SUPABASE__);
