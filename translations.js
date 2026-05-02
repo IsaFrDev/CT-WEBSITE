@@ -14,7 +14,7 @@ const translations = {
         stat_blocked: "To'xtatilgan hujumlar",
         stat_users: "Himoyalangan foydalanuvchilar",
         stat_rate: "% Aniqlash darajasi",
-        scan_title: "CT Link Skaner",
+        scan_title: "CT havola skaneri",
         scan_placeholder: "Skanerlash uchun URL kiriting...",
         scan_btn: "Skanerlash",
         about_badge: "ℹ️ Biz haqimizda",

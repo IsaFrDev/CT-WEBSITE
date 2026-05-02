@@ -128,51 +128,94 @@ const BRANDS = {paypal:'paypal.com',google:'google.com',facebook:'facebook.com',
 const HOMOGLYPHS = {'0':'o','1':'l','3':'e','4':'a','5':'s','7':'t','8':'b','|':'l','!':'i'};
 
 function analyzeUrl(url) {
-    if (!url) return {result:'invalid',confidence:0,findings:['Empty URL'],risk_score:0};
+    if (!url) return { result: 'invalid', confidence: 0, findings: ['URL bo‘sh'], risk_score: 0 };
     if (!url.startsWith('http')) url = 'http://' + url;
-    let findings = [], risk = 0;
+    let findings = [],
+        risk = 0;
     try {
         const u = new URL(url);
         const domain = u.hostname.toLowerCase();
         const path = u.pathname.toLowerCase();
-        // Whitelist
-        if (LEGIT_DOMAINS.some(d => domain.endsWith(d))) {
-            return {result:'safe',confidence:0.95,findings:['✅ Verified legitimate domain'],risk_score:0,domain};
+        if (LEGIT_DOMAINS.some((d) => domain.endsWith(d))) {
+            return {
+                result: 'safe',
+                confidence: 0.95,
+                findings: ['✅ Tasdiqlangan ishonchli domen'],
+                risk_score: 0,
+                domain,
+            };
         }
-        // IP address
-        if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(domain)) { risk+=30; findings.push('⚠️ URL uses IP address'); }
-        // Suspicious TLD
-        for (const t of SUSPICIOUS_TLDS) { if (domain.endsWith(t)) { risk+=20; findings.push('⚠️ Suspicious TLD: '+t); break; } }
-        // Long domain
-        if (domain.length > 30) { risk+=15; findings.push('⚠️ Unusually long domain'); }
-        // Subdomains
-        if (domain.split('.').length > 4) { risk+=20; findings.push('⚠️ Excessive subdomains'); }
-        // Brand impersonation
-        const dp = domain.replace(/[.\-]/g,' ');
-        for (const [b,ld] of Object.entries(BRANDS)) {
-            if (dp.includes(b) && !domain.endsWith(ld)) { risk+=40; findings.push('🔴 Brand impersonation: '+b); break; }
+        if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(domain)) {
+            risk += 30;
+            findings.push('⚠️ URL to‘g‘ridan-to‘g‘ri IP-manzilga ishora qiladi');
         }
-        // Homoglyph
-        let base = domain.split('.')[0], norm = '', hasSub = false;
-        for (const c of base) { if (HOMOGLYPHS[c]) { norm += HOMOGLYPHS[c]; hasSub = true; } else norm += c; }
-        if (hasSub) { for (const b of Object.keys(BRANDS)) { if (norm === b) { risk+=35; findings.push('🔴 Homoglyph: "'+base+'" → "'+b+'"'); break; } } }
-        // No HTTPS
-        if (u.protocol === 'http:') { risk+=10; findings.push('⚠️ No HTTPS'); }
-        // Path keywords
-        for (const sp of ['login','signin','verify','secure','account','update','confirm']) {
-            if (path.includes(sp)) { risk+=10; findings.push('⚠️ Suspicious path: '+sp); break; }
+        for (const t of SUSPICIOUS_TLDS) {
+            if (domain.endsWith(t)) {
+                risk += 20;
+                findings.push('⚠️ Shubhali domen zonasi (TLD): ' + t);
+                break;
+            }
         }
-        // @ in URL
-        if (u.username || domain.includes('@')) { risk+=30; findings.push('🔴 @ in URL'); }
-        // Dashes
-        if ((domain.match(/-/g)||[]).length > 2) { risk+=15; findings.push('⚠️ Excessive dashes'); }
+        if (domain.length > 30) {
+            risk += 15;
+            findings.push('⚠️ Domen g‘ayritabiiy uzun');
+        }
+        if (domain.split('.').length > 4) {
+            risk += 20;
+            findings.push('⚠️ Juda koʻp subdomain');
+        }
+        const dp = domain.replace(/[.\-]/g, ' ');
+        for (const [b, ld] of Object.entries(BRANDS)) {
+            if (dp.includes(b) && !domain.endsWith(ld)) {
+                risk += 40;
+                findings.push('🔴 Brendni soxta qilish (taqlid): ' + b);
+                break;
+            }
+        }
+        let base = domain.split('.')[0],
+            norm = '',
+            hasSub = false;
+        for (const c of base) {
+            if (HOMOGLYPHS[c]) {
+                norm += HOMOGLYPHS[c];
+                hasSub = true;
+            } else norm += c;
+        }
+        if (hasSub) {
+            for (const b of Object.keys(BRANDS)) {
+                if (norm === b) {
+                    risk += 35;
+                    findings.push('🔴 O‘xshash harf bilan aldash: «' + base + '» → «' + b + '»');
+                    break;
+                }
+            }
+        }
+        if (u.protocol === 'http:') {
+            risk += 10;
+            findings.push("⚠️ HTTPS yo'q (ochiq HTTP)");
+        }
+        for (const sp of ['login', 'signin', 'verify', 'secure', 'account', 'update', 'confirm']) {
+            if (path.includes(sp)) {
+                risk += 10;
+                findings.push('⚠️ Shubha yoʻl (path): ' + sp);
+                break;
+            }
+        }
+        if (u.username || domain.includes('@')) {
+            risk += 30;
+            findings.push("🔴 URL ichida '@' / foydalanuvchi nomi");
+        }
+        if ((domain.match(/-/g) || []).length > 2) {
+            risk += 15;
+            findings.push('⚠️ Juda koʻp tire (-) domen nomida');
+        }
 
         risk = Math.min(risk, 100);
         const result = risk >= 60 ? 'phishing' : risk >= 30 ? 'suspicious' : 'safe';
-        if (!findings.length) findings.push('✅ No threats detected');
-        return {result, confidence: +(risk/100).toFixed(2), findings, risk_score: risk, domain};
-    } catch(e) {
-        return {result:'error',confidence:0,findings:['❌ Invalid URL format'],risk_score:0};
+        if (!findings.length) findings.push('✅ Aniqlangan xavf yoʻq');
+        return { result, confidence: +(risk / 100).toFixed(2), findings, risk_score: risk, domain };
+    } catch (e) {
+        return { result: 'error', confidence: 0, findings: ['❌ URL formati notoʻgʻri'], risk_score: 0 };
     }
 }
 
@@ -257,14 +300,19 @@ demoScan?.addEventListener('click', () => {
     const r = analyzeUrl(url);
     const emoji = r.result === 'phishing' ? '🔴' : r.result === 'suspicious' ? '🟡' : '🟢';
     const color = r.result === 'phishing' ? '#ff4757' : r.result === 'suspicious' ? '#ffa502' : '#2ed573';
-    const label = r.result === 'phishing' ? 'FIRIBGARLIK ANIQLANDI!' : r.result === 'suspicious' ? 'SUSPICIOUS LINK' : 'LINK IS SAFE';
+    const label =
+        r.result === 'phishing'
+            ? 'FIRIBGARLIK ANIQLANDI!'
+            : r.result === 'suspicious'
+              ? 'SHUBHALI HAVOLA'
+              : 'HAVOLA XAVFSIZ';
     scanResult.style.borderColor = color + '33';
     scanResult.style.background = color + '0d';
     scanResult.innerHTML = `
         <div class="result-icon">${emoji}</div>
         <div class="result-text">
             <strong style="color:${color}">${label}</strong>
-            <p>Risk Score: ${r.risk_score}/100 | Confidence: ${(r.confidence*100).toFixed(0)}%</p>
+            <p>Xavf balli: ${r.risk_score}/100 | Ishonchlilik: ${(r.confidence * 100).toFixed(0)}%</p>
             <p>${r.findings[0] || ''}</p>
         </div>`;
 });
@@ -299,11 +347,11 @@ liveScan?.addEventListener('click', async () => {
     const label = result.result === 'phishing' ? 'XAVFLI — FIRIBGARLIK!' : result.result === 'suspicious' ? 'SHUBHALI LINK' : 'XAVFSIZ ✅';
 
     let html = `<p class="${cls}" style="font-size:1.1rem;font-weight:700;margin-bottom:12px">${emoji} ${label}</p>`;
-    html += `<p>📊 Risk Score: <strong>${result.risk_score}/100</strong></p>`;
-    html += `<p>🎯 Confidence: <strong>${(result.confidence*100).toFixed(0)}%</strong></p>`;
-    html += `<p>🌐 URL: ${url.substring(0,60)}${url.length>60?'...':''}</p>`;
+    html += `<p>📊 Xavf balli: <strong>${result.risk_score}/100</strong></p>`;
+    html += `<p>🎯 Ishonchlilik: <strong>${(result.confidence * 100).toFixed(0)}%</strong></p>`;
+    html += `<p>🌐 Manzil: ${url.substring(0, 60)}${url.length > 60 ? '...' : ''}</p>`;
     html += '<hr style="border-color:var(--border);margin:12px 0">';
-    html += '<p style="margin-bottom:8px;font-weight:600">📋 Findings:</p>';
+    html += '<p style="margin-bottom:8px;font-weight:600">📋 Tahlil natijalari:</p>';
     (result.findings || []).forEach(f => { html += `<p style="padding:2px 0">${f}</p>`; });
 
     if (result.result === 'phishing') {
@@ -387,17 +435,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            if (t[key]) {
-                el.innerHTML = t[key];
-            }
+            if (t[key]) el.innerHTML = t[key];
         });
 
-        // Update placeholder if it exists
-        const demoInput = document.getElementById('demoInput');
-        if (demoInput && t.scan_placeholder) demoInput.placeholder = t.scan_placeholder;
-        
-        const demoScanBtn = document.getElementById('demoScan');
-        if (demoScanBtn && t.scan_btn) demoScanBtn.textContent = t.scan_btn;
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (key && t[key] && 'placeholder' in el) el.placeholder = t[key];
+        });
 
         // Save preference
         localStorage.setItem('ct_lang', lang);

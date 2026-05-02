@@ -82,26 +82,26 @@
                 <div class="scanner-demo" id="scannerDemo">
                     <div class="scanner-header">
                         <div class="scanner-dots"><span></span><span></span><span></span></div>
-                        <span class="scanner-title">CT Link Scanner</span>
+                        <span class="scanner-title" data-i18n="scan_title">CT havola skaneri</span>
                     </div>
                     <div class="scanner-body">
                         <div class="scanner-input-group">
-                            <input type="text" class="scanner-input" id="demoInput" placeholder="Enter URL to scan..." value="https://paypa1-secure.xyz/login">
-                            <button class="scanner-btn" id="demoScan">Scan</button>
+                            <input type="text" class="scanner-input" id="demoInput" data-i18n-placeholder="scan_placeholder" placeholder="Skanerlash uchun URL kiriting..." value="https://paypa1-secure.xyz/login">
+                            <button class="scanner-btn" id="demoScan" data-i18n="scan_btn">Skanerlash</button>
                         </div>
                         <div class="scanner-result" id="scanResult">
                             <div class="result-icon">🔴</div>
                             <div class="result-text">
                                 <strong>FIRIBGARLIK ANIQLANDI!</strong>
-                                <p>Brand impersonation: paypal</p>
-                                <p>Risk Score: 85/100</p>
+                                <p>Brendni soxta qilish (taqlid): paypal</p>
+                                <p>Xavf balli: 85/100</p>
                             </div>
                         </div>
                         <div class="scanner-log">
-                            <div class="log-line"><span class="log-check">✓</span> URL structure analyzed</div>
-                            <div class="log-line"><span class="log-check">✓</span> Domain reputation checked</div>
-                            <div class="log-line"><span class="log-warn">⚠</span> Homoglyph attack: "paypa1" → "paypal"</div>
-                            <div class="log-line"><span class="log-warn">⚠</span> Suspicious TLD: .xyz</div>
+                            <div class="log-line"><span class="log-check">✓</span> URL tuzilmasi tahlil qilindi</div>
+                            <div class="log-line"><span class="log-check">✓</span> Domen obro‘si tekshirildi</div>
+                            <div class="log-line"><span class="log-warn">⚠</span> O‘xshash harf aldashi: «paypa1» → «paypal»</div>
+                            <div class="log-line"><span class="log-warn">⚠</span> Shubhali zonasi (TLD): .xyz</div>
                         </div>
                     </div>
                 </div>
