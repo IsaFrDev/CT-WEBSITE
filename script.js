@@ -5,9 +5,9 @@
 
 const API_BASE = 'http://localhost:5000/api';
 
-/** Supabase: Auth → Providers → Google. Google OAuth redirect = https://PROJECT.supabase.co/auth/v1/callback (GCP da sayt uchun redirect emas).
- *  Shu joyga gmail.readonly qoshing: Providers → Google → Additional scopes → https://www.googleapis.com/auth/gmail.readonly
- *  Auth → URL configuration → Redirect URLs ga sayt URL (misol: GitHub Pages) qo'shing — getSiteUrlForSupabaseOAuth() chiqaradigan qiymat. */
+/** Supabase Email auth: Dashboard → Authentication → Providers → Email (YOQIQ).
+ *  URL configuration → Site URL va Redirect URLs: getSiteUrlForAuthRedirect() mos URL (HTTPS + path).
+ */
 const CT_SUPABASE = {
     url: 'https://iwtkibrjkyunvebvdceq.supabase.co',
     anonKey:
@@ -19,7 +19,7 @@ if (typeof window !== 'undefined' && window.__CT_SUPABASE__) {
 const SUPABASE_URL = String(CT_SUPABASE.url || '').trim();
 const SUPABASE_ANON_KEY = String(CT_SUPABASE.anonKey || '').trim();
 
-function getSiteUrlForSupabaseOAuth() {
+function getSiteUrlForAuthRedirect() {
     if (typeof window.__CT_GOOGLE_REDIRECT_URI__ === 'string' && window.__CT_GOOGLE_REDIRECT_URI__.trim())
         return String(window.__CT_GOOGLE_REDIRECT_URI__).trim();
     let path = window.location.pathname || '/';
@@ -30,17 +30,22 @@ function getSiteUrlForSupabaseOAuth() {
 }
 
 let sbAuth = null;
+let shownEmailBannerFor = '';
 
-function consumeGmailFetchFlagAndRun(providerAccessToken) {
-    if (
-        typeof sessionStorage === 'undefined' ||
-        sessionStorage.getItem('ct_expect_gmail_fetch') !== '1' ||
-        !providerAccessToken
-    )
-        return false;
-    sessionStorage.removeItem('ct_expect_gmail_fetch');
-    void runGmailFetchWithGoogleToken(providerAccessToken);
-    return true;
+function showEmailSignedInBanner(email) {
+    if (!email || shownEmailBannerFor === email) return;
+    shownEmailBannerFor = email;
+    const gmailOutput = document.getElementById('gmailOutput');
+    const hint = document.getElementById('authEmailHint');
+    if (hint) hint.textContent = '';
+    if (gmailOutput) {
+        gmailOutput.style.display = 'block';
+        gmailOutput.innerHTML = `<div style="background:rgba(0,230,119,0.12);border:1px solid rgba(0,230,119,0.35);padding:14px;border-radius:10px">
+            <p style="color:var(--success);font-weight:700;margin-bottom:8px">✅ Ulandi: <span style="color:var(--text-primary)">${email}</span></p>
+            <p style="color:var(--text-secondary);font-size:0.9rem">Phishing uchun yuqoridagi maydonga shubhali havolani qo'yib sinab koʻring.</p>
+        </div>`;
+        document.getElementById('try-now')?.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
@@ -49,8 +54,10 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined' 
     });
 
     sbAuth.auth.onAuthStateChange((event, session) => {
-        if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
-        consumeGmailFetchFlagAndRun(session?.provider_token);
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user?.email) {
+            showEmailSignedInBanner(session.user.email);
+        }
+        if (event === 'SIGNED_OUT') shownEmailBannerFor = '';
     });
 }
 
@@ -313,48 +320,6 @@ if (dashSection) {
     dObs.observe(dashSection);
 }
 
-function runGmailFetchWithGoogleToken(googleAccessToken) {
-    const gmailOutput = document.getElementById('gmailOutput');
-    if (!gmailOutput || !googleAccessToken) return;
-
-    gmailOutput.style.display = 'block';
-    gmailOutput.innerHTML = '<p style="color:var(--accent);animation:pulse 1s infinite">📧 Gmaildan xabarlar olinmoqda va AI tekshirmoqda...</p>';
-    setTimeout(() => {
-        document.getElementById('try-now')?.scrollIntoView({ behavior: 'smooth' });
-    }, 300);
-
-    fetch(`${API_BASE}/gmail/fetch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: googleAccessToken })
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.error) throw new Error(data.error);
-            let html = '<h4 style="margin-bottom:10px; color:#fff;">Oxirgi Xabarlar:</h4>';
-            data.forEach((msg) => {
-                const color = msg.result === 'phishing' ? '#ff4757' : msg.result === 'suspicious' ? '#ffa502' : '#2ed573';
-                const emoji = msg.result === 'phishing' ? '🔴' : msg.result === 'suspicious' ? '🟡' : '🟢';
-                html += `
-                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid ${color}">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <strong style="color:#fff; font-size:0.95rem;">${msg.sender.substring(0, 35)}</strong>
-                                <span style="color:#888; font-size:0.8rem;">${msg.time}</span>
-                            </div>
-                            <p style="font-size:0.9rem; margin-bottom:8px; color:#ddd; line-height:1.4;">${msg.text.substring(0, 100)}...</p>
-                            <div style="font-size:0.85rem; color:${color}; font-weight:600; padding:6px; background:rgba(0,0,0,0.2); border-radius:4px;">
-                                ${emoji} AI Xulosasi: ${msg.reason}
-                            </div>
-                        </div>
-                    `;
-            });
-            gmailOutput.innerHTML = html;
-        })
-        .catch((err) => {
-            gmailOutput.innerHTML = `<p style="color:var(--danger)">❌ Xatolik yuz berdi: ${err.message}</p>`;
-        });
-}
-
 // ============================================================
 //  INIT
 // ============================================================
@@ -396,47 +361,78 @@ document.addEventListener('DOMContentLoaded', () => {
     setLanguage(savedLang);
 
     // ============================================================
-    //  Gmail: Supabase Auth (Google provider) → provider_token → backend /gmail/fetch
+    //  Supabase: email OTP / magic link (Google provider kerak emas)
     // ============================================================
-    const btnGmailScan = document.getElementById('btnGmailScan');
+    const authEmailInput = document.getElementById('authEmailInput');
+    const authOtpInput = document.getElementById('authOtpInput');
+    const btnEmailSendOtp = document.getElementById('btnEmailSendOtp');
+    const btnEmailVerifyOtp = document.getElementById('btnEmailVerifyOtp');
+    const authEmailHint = document.getElementById('authEmailHint');
 
-    btnGmailScan?.addEventListener('click', async () => {
+    btnEmailSendOtp?.addEventListener('click', async () => {
         if (window.location.protocol === 'file:') {
-            alert("Xatolik: Google orqali kirish uchun saytni HTTP server orqali oching. 'file://'da ishlamaydi.");
+            alert('HTTP server orqali oching (`file://`da email auth ishlamaydi).');
             return;
         }
         if (!sbAuth) {
-            alert('Supabase sozlangan emas.\n• script.js dagi CT_SUPABASE.anonKey ga anon kalit yozing,\n• yoki window.__CT_SUPABASE__ bilan url/anonKey bering.');
+            alert(
+                'Supabase sozlanmagan. script.js ichida CT_SUPABASE.anonKey ni tekshiring yoki window.__CT_SUPABASE__.'
+            );
             return;
         }
-
-        sessionStorage.setItem('ct_expect_gmail_fetch', '1');
-        const redirectTo = getSiteUrlForSupabaseOAuth();
-
-        try {
-            const { error } = await sbAuth.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo,
-                    scopes:
-                        'openid email profile https://www.googleapis.com/auth/gmail.readonly',
-                    queryParams: { access_type: 'offline', prompt: 'consent' },
-                },
-            });
-            if (error) {
-                sessionStorage.removeItem('ct_expect_gmail_fetch');
-                alert('Google kirish xatosi: ' + error.message);
-            }
-        } catch (e) {
-            sessionStorage.removeItem('ct_expect_gmail_fetch');
-            alert(String(e?.message || e));
+        const email = String(authEmailInput?.value || '')
+            .trim()
+            .toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Yaroqli email kiriting.');
+            return;
         }
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('ct_otp_email', email);
+        if (authEmailHint) authEmailHint.textContent = 'Yuborilmoqda…';
+        const { error } = await sbAuth.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: getSiteUrlForAuthRedirect(),
+                shouldCreateUser: true,
+            },
+        });
+        if (authEmailHint) {
+            authEmailHint.textContent = error
+                ? `Xato: ${error.message}`
+                : "Email tekshiring. Kod kelgan boʻlsa quyidagi maydonga yozing — yoki xabardagi havolani oching (magic link).";
+        }
+        if (error && typeof sessionStorage !== 'undefined') sessionStorage.removeItem('ct_otp_email');
     });
 
-    if (sbAuth && typeof sessionStorage !== 'undefined') {
-        setTimeout(async () => {
-            const { data } = await sbAuth.auth.getSession();
-            consumeGmailFetchFlagAndRun(data.session?.provider_token);
-        }, 400);
-    }
+    btnEmailVerifyOtp?.addEventListener('click', async () => {
+        if (!sbAuth) return;
+        const email =
+            String(authEmailInput?.value || '')
+                .trim()
+                .toLowerCase() ||
+            (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('ct_otp_email') || '' : '');
+        const raw = String(authOtpInput?.value || '').trim().replace(/\s+/g, '');
+        if (!email || !raw) {
+            alert('Email va kodni kiriting.');
+            return;
+        }
+        if (authEmailHint) authEmailHint.textContent = 'Tekshirilmoqda…';
+
+        let res = await sbAuth.auth.verifyOtp({ email, token: raw, type: 'email' });
+        if (res.error) res = await sbAuth.auth.verifyOtp({ email, token: raw, type: 'signup' });
+        if (res.error) {
+            if (authEmailHint) authEmailHint.textContent = `Kod toʻgʻri emas yoki muddat tugagan: ${res.error.message}`;
+            return;
+        }
+        if (authEmailHint) authEmailHint.textContent = '';
+        authOtpInput.value = '';
+    });
+
+    void (async () => {
+        if (!sbAuth) return;
+        const {
+            data: { session },
+        } = await sbAuth.auth.getSession();
+        if (session?.user?.email) showEmailSignedInBanner(session.user.email);
+    })();
 });
