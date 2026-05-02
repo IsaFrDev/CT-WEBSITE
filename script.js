@@ -93,7 +93,7 @@ function showEmailSignedInBanner(email) {
         gmailOutput.style.display = 'block';
         gmailOutput.innerHTML = `<div style="background:rgba(0,230,119,0.12);border:1px solid rgba(0,230,119,0.35);padding:14px;border-radius:10px">
             <p style="color:var(--success);font-weight:700;margin-bottom:8px">✅ Ulandi: <span style="color:var(--text-primary)">${email}</span></p>
-            <p style="color:var(--text-secondary);font-size:0.9rem">Phishing uchun yuqoridagi maydonga shubhali havolani qo'yib sinab koʻring.</p>
+            <p style="color:var(--text-secondary);font-size:0.9rem">Siz saytda <strong>email bilan roʻyxatdan oʻtgan / kirdingiz</strong> (inbox oʻqilmaydi). Shubhali <strong>havolani</strong> yuqoridagi skanerdan tekshiring.</p>
         </div>`;
         document.getElementById('try-now')?.scrollIntoView({ behavior: 'smooth' });
     }
